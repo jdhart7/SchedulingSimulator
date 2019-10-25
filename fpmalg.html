@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC>
+<html>
+<head>
+<title>Fixed Priority Algorithm</title>
+<script type = "text/javascript">
+	<!--
+	function randomGen(high, low) {
+		rand = Math.floor((Math.random() * high) + low);
+		return rand;
+	};
+	
+	function bound() {
+		
+		temp = 1 / m;
+		temp = Math.pow(2, temp);
+		UtiBound = m * (temp - 1);
+		UtiBound = UtiBound * 100;
+		
+	};
+	
+	function Utilize() {
+		for (i = 0; i < m; i++) {
+			temp = runTimes[i] / requestTimes[i];
+			ute = temp + ute;
+		};
+	};
+	
+	function getInfoWeight() {
+		for (i = 0; i < m; i++) {
+			requestTimes[i] = randomGen((m * 10), 15);
+			temp = requestTimes[i] / (m - 2);
+			runTimes[i] = randomGen(temp, 1);
+			if (runTimes[i] >= requestTimes[i] || (runTimes[i] / requestTimes[i]) >= m / (m * 2)) {
+				i--;
+			};
+		};
+	};
+	
+	function getInfo() {
+		for (i = 0; i < m; i++) {
+			requestTimes[i] = randomGen(50, 20);
+			runTimes[i] = randomGen(35, 1);
+			if (runTimes[i] >= requestTimes[i] || (runTimes[i] / requestTimes[i]) >= m / (m * 2)) {
+				i--;
+			};
+		};
+	};
+	
+	
+	var runTimes = [], requestTimes = [], temp = 0, ute = 0, high = 50, low = 1, weight = 0;
+	
+	//weight = window.prompt("Weighted? Y/N:");
+	m = window.prompt("Enter an m");
+	
+	bound();
+	
+	if (weight == "Y" || weight == "y") {
+		getInfoWeight();
+	} else {
+		getInfo();
+	};
+	
+	Utilize();
+	
+	document.writeln("<table border = 1><tr><td>Request Periods (Ti)</td><td>Run Times (Ci)</td></tr>");
+	for (i = 0; i < m; i++) {
+		document.writeln("<tr><td>" +requestTimes[i]+ "</td><td>" +runTimes[i]+ "</td></tr>");
+	};
+	document.writeln("</table>");
+	
+	document.writeln("Bound: " +Math.round(UtiBound)+ "% Utilization: " +Math.round(ute * 100)+ "%");
+	
+	ute = Math.round(ute * 100)
+	if (ute <= UtiBound) {
+		document.writeln("<br />The algorithm is <p style = 'color: green;'> feasible</p>");
+	} else if (ute <= '100') {
+		document.writeln("<br />It is <i>unclear</i> if the algorithm is feasible");
+	} else {
+		document.writeln("<br />The algorithm is <p style = 'color: red;'> <i>not</i> feasible</p>");
+	};
+		
+		
+		
+	//-->
+</script>
+</head>
+
+<body>
+
+</body>
+
+</html>
