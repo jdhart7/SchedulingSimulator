@@ -62,50 +62,85 @@
 	function grapher() {
 		graphs = [[], []];
 		y = 0;
+		completed = [];
 		
-		for (i = 0; i < m; i++) {
+		for (i = 0; i < m; i++) {		//making 0 the first element of the completed array
+			completed[i] = 0;
+		};
+		
+		for (i = 0; i <= m; i++) {	//making a 2D array with 2nd D's size m
 			graphs[i] = [];
 		};
 		
 		for (i = 0; i < m; i++) {
-			for (j = 0; j < 100; j++) {
+			for (j = 0; j < 200; j++) {
 				graphs[i][j] = 0;
 			};
 		};
 		
-		for (i = 1; i < runTimes[0]; i++) {
-			graphs[0][i] = 1;
-		};
-		
 		for (x = 0; x < m; x++) {
-			for (i = 0; i < 100;) {
+			for (i = 0; i < 200;) {
 				graphs[x][i] = 2;
-				i = i + requestTimes[x];
+				i = (i + requestTimes[x]) - 1;
 			};
 		};
 		
+		for (i = 0; i < 200; i++) {
+			graphs[m][i] = i;
+		};
 		
-		document.writeln("graphs: " +graphs);
+		j = 0;
+		k = 0;
+		for (i = 0; i < 500; i++) {
+			for (x = 0; x < m; x++) {
+				if (graphs[x][j] == 2) {
+					completed[x] = 0;
+					
+				};
+			};
+
+			if (completed[k] < runTimes[k]) {
+				graphs[k][j + 1] = 1;
+				j++;
+				completed[k] = completed[k] + 1;
+				k = 0;
+			} else if (graphs[k][j] == 2) {
+				completed[k] = 0;
+				k = 0;
+				for (b = 0; b < m; b++) {
+					graphs[b][j] = 3;
+				};
+			} else if (k < m - 1) {
+				k++;
+			} else {
+				k = 0;
+				j++;
+			};
+		};
+
 		printIt();
 	
 	};
 	
 	function printIt() {
-	document.writeln("graphs: " +graphs);
-		document.writeln("<table border = 0 border-collapse = collapse>");
+		document.writeln("<table border = 1 style = border-collapse: collapse;>");
 		
 		for (i = 0; i < m; i++) {
 			document.writeln("<tr>");
-			for (j = 0; j < 100; j++) {
+			for (j = 0; j < 200; j++) {
 				if (graphs[i][j] == 0) {
-					document.writeln("<td style = 'background-color: black;'>...</td>");
+					document.writeln("<td style = 'background-color: white; color: white;'>...</td>");
 				} else if (graphs[i][j] == 2) {
-					document.writeln("<td style = 'background-color: green;'>...</td>");
+					document.writeln("<td style = 'background-color: black;'>..</td>");
 				} else {
-					document.writeln("<td style = 'background-color: white;'>...</td>");
+					document.writeln("<td style = 'background-color: green; color: green;'>...</td>");
 				};
 			};
 			document.writeln("</tr>");
+		};
+		document.writeln("<tr>");
+		for (k = 0; k < 200; k++) {
+			document.writeln("<td>" +graphs[m][k]+ "</td>");
 		};
 		document.writeln("</table>");
 		
