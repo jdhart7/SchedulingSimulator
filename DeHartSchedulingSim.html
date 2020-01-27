@@ -1,0 +1,296 @@
+<!DOCTYPE html PUBLIC>
+<html>
+<head>
+<title>Scheduling Algorithms</title>
+<script type = "text/javascript">
+	<!--
+	function randomGen(high, low) {		//random number generator called by several functions.
+		rand = Math.floor((Math.random() * high) + low);
+		return rand;
+	};
+	
+	function bound() {		//finds the %processor utilization the tasks must be under for the set to be feasible as outlined in the paper.
+		
+		temp = 1 / m;
+		temp = Math.pow(2, temp);
+		UtiBound = m * (temp - 1);
+		UtiBound = UtiBound * 100;
+		
+	};
+	
+	function Utilize() {		//finds the processor utilization for the task set as discussed in the paper
+		for (i = 0; i < m; i++) {
+			temp = runTimes[i] / requestTimes[i];
+			ute = temp + ute;
+		};
+	};
+	
+	function getInfoWeight() {		//creates a task set that's more likely to have a solution than a "fair" randomly generated set
+		for (i = 0; i < m; i++) {
+			requestTimes[i] = randomGen((m * 10), 15);
+			temp = requestTimes[i] / (m - 2);
+			runTimes[i] = randomGen(temp, 1);
+			if (runTimes[i] >= requestTimes[i] || (runTimes[i] / requestTimes[i]) >= m / (m * 2)) {
+				i--;
+			};
+		};
+	};
+	
+	function getInfo() {		//gets a semi-random set of tasks. fills the arrays with numbers for each m.
+		for (i = 0; i < m; i++) {
+			requestTimes[i] = randomGen(50, 20);	//calls random number generator and gets a number between 20 and 50
+			runTimes[i] = randomGen(35, 1);
+			if (runTimes[i] >= requestTimes[i] || (runTimes[i] / requestTimes[i]) >= m / (m * 2)) {		//if runtimes are greater than request times or the request time/
+				i--;										//runtime time ratio is less than m/(m*2), decriment i. This forces it to copy over that entry to make the 
+			};												//Gantt diagrams more interesting (because all the trivial cases are removed)
+		};
+	};
+	
+	function sorter() {		//special sorting function that sorts the request times and keeps the runTimes in order. The request times need to be sorted from shortest to
+		for (i = 0; i <= m; i++) {													//longest as that's how it determines which task to complete first
+			if (requestTimes[i] > requestTimes[i + 1]) {
+				holder = requestTimes[i];
+				requestTimes[i] = requestTimes[i + 1];		//basically just a bubble sort, but when it re-orders the request time, it also moves the run times
+				requestTimes[i + 1] = holder;				//with it
+				holder = runTimes[i];
+				runTimes[i] = runTimes[i + 1];
+				runTimes[i + 1] = holder;
+			};
+		};
+	};
+	
+	function grapher() {		//schedules the tasks under the fixed priority rate monotonic scheduling algorithm as outlined in the research paper.
+		graphs = [[], []];
+		y = 0;
+		completed = [];
+		
+		for (i = 0; i < m; i++) {		//making 0 the first element of the completed array
+			completed[i] = 0;
+		};
+		
+		for (i = 0; i <= m; i++) {	//making a 2D array with 2nd D's size m
+			graphs[i] = [];
+		};
+		
+		for (i = 0; i < m; i++) {
+			for (j = 0; j < 700; j++) {	//fills with 1's to prevent null error
+				graphs[i][j] = 0;
+			};
+		};
+		
+		for (x = 0; x < m; x++) {
+			for (i = 0; i < 700;) {
+				graphs[x][i] = 2;
+				i = i + requestTimes[x];		//put request times into graphs
+			};
+		};
+		
+		for (i = 0; i < 700; i++) {
+			graphs[m][i] = i;
+		};
+		
+		graphs[0][0] = 0;
+		graphs[1][0] = 0;
+		j = 0;
+		k = 0;
+		for (i = 0; i < 2500; i++) {
+			for (x = 0; x < m; x++) {	//checks to see if the task has completed the full runtime. If it hasn't, increase the feasibility to indicate it's not
+				if (graphs[x][j] == 2) {			//feasible. Also sets the current location to 4 to indicate the position that the task failed.
+					if (completed[x] !== runTimes[x] && j > 4 && ute > UtiBound && completed[x] !== 0) {
+						graphs[x][j] = 4;
+						feasibility++;
+					};
+					completed[x] = 0;		//resets how many time units the algorithm has scheduled for that period
+				};
+			};
+
+			if (completed[k] < runTimes[k] && graphs[k][j + 1] !== 4) {		//mark the current position as completed if the current task isn't completed
+				graphs[k][j + 1] = 1;
+				j++;
+				completed[k] = completed[k] + 1;
+				k = 0;
+			} else if (k < m - 1) {		//if the current task is completed and there are more, move on to the next one.
+				k++;
+			} else {		//all the tasks are completed, just move on to the next square and go back up to the top.
+				k = 0;
+				j++;
+			};
+		};
+		
+		document.writeln("<h1 style = 'font-family: arial;'>Fixed Priority: </h1>");
+
+		printIt(graphs);
+	
+	};
+	
+	function deadlineDriven() {
+		
+		var graphs = [[],[]];
+		var deadlines = [];
+		var completion = [];
+		feasibility = 0;
+		
+		for (i = 0; i <= m; i++) {
+			graphs[i] = [];
+			completion[i] = 0;
+			deadlines[i] = requestTimes[i] + 1;
+		};
+		
+		for (i = 0; i < m; i++) {
+			for (j = 0; j < 700; j++) {
+				graphs[i][j] = 0;
+			};
+		};
+		
+		for (i = 0; i < 700; i++) {
+			graphs[m][i] = i;
+		};
+		
+		j = 1;
+		k = 0;
+		for (i = 0; i < 2500; i++) {
+			for (r = 0; r < m; r++) {
+				if (j == deadlines[r]) {
+					deadlines[r] = deadlines[r] + requestTimes[r];
+					graphs[r][j - 1] = 2;
+					if (completion[r] !== runTimes[r] && completion[r] !== 0 && j > 4) {
+						//window.alert("requests: " +requestTimes[0]+ "completion: " +completion[0]);
+						feasibility = 1;
+						graphs[r][j - 1] = 4;
+					};
+					completion[r] = 0;
+				};
+			};
+			for (p = 0; p < m; p++) {
+				if (runTimes[p] > completion[p]) {
+					deadlineDeterminer(deadlines, completion, p);
+					p = 100;
+					//window.alert("task: " +task);
+					graphs[task][j] = 1;
+					completion[task] = completion[task] + 1;
+					//j++;
+				};
+			};
+			j++;
+		};
+		console.log(deadlines);
+		
+		document.writeln("<H1 style = 'font-family: arial;'>Deadline Driven: </h1>");
+		printIt(graphs);
+		
+	};
+	
+	function deadlineDeterminer(deadlines, completion, p) {
+		task = p;
+		for (num = 0; num < m; num++) {
+			if (deadlines[task] > deadlines[num] && runTimes[num] > completion[num]) {
+				task = num;
+				//window.alert("task: " +task);		//for debugging
+			};
+		};
+	};
+	
+	function printIt(graphs) {		//prints the Gantt diagram to the window
+		document.writeln("<table border = 1 style = 'border-collapse: collapse;'>");		//create the table for the graphs
+		
+		for (i = 0; i < m; i++) {		//for loop that actually creates the diagram
+			document.writeln("<tr>");
+			for (j = 0; j < 700; j++) {
+				if (j == 0) {
+					//document.writeln("<td style = 'background-color: purple; color: purple;'>.</td>");
+				} else if (graphs[i][j] == 0) {		//when there is no event in the space (for example, no task being completed in this space), print a white block with
+					document.writeln("<td style = 'background-color: white; color: white; border-right: 1px grey dashed;'>..</td>");	//dashed lines on either side
+				} else if (graphs[i][j] == 2) {		//print a purple line on the right if the next space has a 2, indicating the task is being reset
+					document.writeln("<td style = 'background-color: white; color: white; border-right: 5px purple solid;'></td>");
+				} else if (graphs[i][j] == 4) {		//print a red line on the right if the next position resets the task, but it wasn't completed.
+					document.writeln("<td style = 'background-color: white; color: white; border-right: 5px red solid;'>..</td>");
+				} else {		//otherwise, print a green block indicating the task is being completed here.
+					document.writeln("<td style = 'background-color: green; color: green;'>...</td>");
+				};
+			};
+			document.writeln("</tr>");
+		};
+		document.writeln("<tr>");
+		for (k = 0; k < 700; k++) {		//print the time key at the bottom of the diagram.
+			document.writeln("<td>" +graphs[m][k]+ "</td>");
+		};
+		document.writeln("</table>");
+		document.writeln("Based on the Gantt diagram, the task set is ");		//tell whether the diagram is feasible after printing the table
+			if (feasibility == 0) {
+				document.writeln("<p style = 'color: green;'>feasible</p>");
+			} else {
+				document.writeln("<p style = 'color: red;'>not feasible</p>");
+			};
+		
+	};
+	
+	var runTimes = [9, 3, 6], requestTimes = [26, 11, 31], temp = 0, ute = 0, high = 50, low = 1, weight = 0, feasibility = 0;
+	var task = 0;
+	
+	//weight = window.prompt("Weighted? Y/N:");
+	m = 3;
+	
+	m = window.prompt("Enter an m (number of tasks): ");
+	
+	bound();
+	
+	/*if (weight == "Y" || weight == "y") {
+		getInfoWeight();
+	} else {
+		getInfo();
+	};*/
+	
+	getInfo();
+	
+	for (x = 0; x <= m; x++) {
+		sorter();
+	};
+	
+	Utilize();
+	
+	document.writeln("<table border = 1><tr><td>Request Periods (Ti)</td><td>Run Times (Ci)</td></tr>");
+	for (i = 0; i < m; i++) {
+		document.writeln("<tr><td>" +requestTimes[i]+ "</td><td>" +runTimes[i]+ "</td></tr>");
+	};
+	document.writeln("</table>");
+	
+	document.writeln("Bound: " +Math.round(UtiBound)+ "% Utilization: " +Math.round(ute * 100)+ "%");
+	
+	ute = Math.round(ute * 100)
+	if (ute <= UtiBound) {
+		document.writeln("<br />Because the processor utilization is under the bound, the algorithm is <p style = 'color: green;'> feasible for both algorithms</p>");
+	} else if (ute <= '100') {
+		document.writeln("<br />Because the processor utilization is between the bound and 100%, it is <i>unclear</i> if the algorithm is feasible under the fixed priority algorithm");
+	} else {
+		document.writeln("<br />Because the processor utilization is over 100%, the algorithm is <p style = 'color: red;'> <i>not</i> feasible under either algorithm</p>");
+	};
+		
+	grapher();
+	
+	deadlineDriven();
+	
+	document.writeln("<h1>Info:</h1><p>This program aims to show how the fixed priority rate monotonic algorithm and the Deadline Driven algorithm look when used as outlined in the paper");
+	document.writeln("<a href = 'https://www.cs.ru.nl/~hooman/DES/liu-layland.pdf'> Scheduling Algorithms for Multipogramming in a Hard-Real-Time Environment</a> by Liu and Layland");
+	document.writeln(". In the paper, it is outlined that the fixed priority algorithm can only consistantly achieve a processor utilization that is the below the average of the runtimes and the request periods. ");
+	document.writeln("For more information, see section 5 on acievable processor utilization.</p><p>The fixed priority algorithm works by completing the shortest task first, then moving on to the next. If ");
+	document.writeln("a shorter period ends before the current task is completed (meaning a task higher on the Gantt diagram arrives before the current task is completed, in the Gantt diagrams showed), ");
+	document.writeln(" the shorter period has a higher priority and therefore would preempt (or interrupt) the current task.</p><p>In the dynamic algorithm, the tasks are scheduled on-the-fly based on ");
+	document.writeln("which deadline is closest. At each time interval, there are two choices: either work on the current task or move on to another. For this algorithm, it will only move to ");
+	document.writeln("another task when it's finished with the current task or a task arrives who has an earlier deadline. The priorities, therefore, must be determined on each time interval. ");
+	document.writeln("While this algorithm is more complicated, it has a guaranteed processor utilization of up to 100%, meaning that as long as the processor utilization is under 100%, the ");
+	document.writeln("dynamic scheduling algorithm is feasible.</p><h1>Key:</h1><p>purple lines represent a period ending. The task will be reset and will need to be completed again at this point");
+	document.writeln("</p><p>Green boxes represent tasks that are being completed at that time. That task has the highest priority at that point according to its respective algorithm</p><p>Request Periods");
+	document.writeln("are the length of the periods. A new period will begin after that amount of time units have passed. The tasks are ordered from smallest period to largest</p><p>Run Times are the lengths");
+	document.writeln("of the tasks.</p><p>The numbers at the bottom of the Gantt diagrams are the time units (usually processor cycles).</p><p>m is the number of tasks. The ideal number of tasks, ");
+	document.writeln("I have found, is 3. More than that and the tasks will almost always not be schedulable. Less, and the results will be uninteresting.");
+	//-->
+</script>
+</head>
+
+<body>
+	<footer>
+		<br /><hr><center><p>Created by John DeHart Fall 2019. You can <a href = "mailto:johndehart00@gmail.com">Email me</a> at johndehart00@gmail.com</p></center>
+	</footer>
+</body>
+
+</html>
