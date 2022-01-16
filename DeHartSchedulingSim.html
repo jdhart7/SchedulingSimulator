@@ -1,9 +1,17 @@
 <!DOCTYPE html PUBLIC>
 <html>
 <head>
-<title>Scheduling Algorithms</title>
+	<title>Scheduling Algorithms</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+	<div id = "chart"></div>	
+	
 <script type = "text/javascript">
-	<!--
+	elem = document.getElementById("chart")
+	elem.remove();
+	document.writeln("<div id = 'chart' style = 'font-family: Arial;'>");
 	function randomGen(high, low) {		//random number generator called by several functions.
 		rand = Math.floor((Math.random() * high) + low);
 		return rand;
@@ -216,11 +224,52 @@
 		};
 		document.writeln("</table>");
 		document.writeln("Based on the Gantt diagram, the task set is ");		//tell whether the diagram is feasible after printing the table
-			if (feasibility == 0) {
-				document.writeln("<p style = 'color: green;'>feasible</p>");
-			} else {
-				document.writeln("<p style = 'color: red;'>not feasible</p>");
-			};
+		if (feasibility == 0 || UtiBound > ute) {
+			document.writeln("<p style = 'color: green;'>feasible</p>");
+		} else {
+			document.writeln("<p style = 'color: red;'>not feasible</p>");
+			feasibility = 0;
+		};
+		
+	};
+	
+	function buttonPush() {
+		ute = 0;
+		elem = document.getElementById("chart");
+		elem.remove();
+		document.writeln("<div id = 'chart' style = 'font-family: Arial;'>");
+		bound();
+		getInfo();
+		for (x = 0; x <= m; x++) {
+			sorter();
+		};
+		Utilize();
+		document.writeln("<table border = 1><tr><td><strong>Request Periods (Ti)</strong></td><td><strong>Run Times (Ci)</strong></td></tr>");
+		for (i = 0; i < m; i++) {
+			document.writeln("<tr><td>" +requestTimes[i]+ "</td><td>" +runTimes[i]+ "</td></tr>");
+		};
+		document.writeln("</table>");
+		
+		document.writeln("<input id = 'buttonPush' type = 'button' value = 'New Values' onclick = 'buttonPush();' /><br />");
+	
+		document.writeln("Bound: " +Math.round(UtiBound)+ "% Utilization: " +Math.round(ute * 100)+ "%");
+	
+		ute = Math.round(ute * 100)
+		if (ute <= UtiBound) {
+			document.writeln("<br />Because the processor utilization is under the bound, the algorithm is <p style = 'color: green;'> feasible for both algorithms</p>");
+		} else if (ute <= '100') {
+			document.writeln("<br />Because the processor utilization is between the bound and 100%, it is <i>unclear</i> if the algorithm is feasible under the fixed priority algorithm");
+		} else {
+			document.writeln("<br />Because the processor utilization is over 100%, the algorithm is <p style = 'color: red;'> <i>not</i> feasible under either algorithm</p>");
+		};
+		
+		document.writeln("<div style='overflow: auto;'>");
+		grapher();
+		deadlineDriven();
+		document.writeln("</div>");
+		printDirections();
+		document.writeln("</div>");
+
 		
 	};
 	
@@ -230,7 +279,7 @@
 	//weight = window.prompt("Weighted? Y/N:");
 	m = 3;
 	
-	m = window.prompt("Enter an m (number of tasks): ");
+	//m = window.prompt("Enter an m (number of tasks): ");
 	
 	bound();
 	
@@ -248,11 +297,12 @@
 	
 	Utilize();
 	
-	document.writeln("<table border = 1><tr><td>Request Periods (Ti)</td><td>Run Times (Ci)</td></tr>");
+	document.writeln("<table border = 1><tr><td><strong>Request Periods (Ti)</strong></td><td><strong>Run Times (Ci)</strong></td></tr>");
 	for (i = 0; i < m; i++) {
 		document.writeln("<tr><td>" +requestTimes[i]+ "</td><td>" +runTimes[i]+ "</td></tr>");
 	};
 	document.writeln("</table>");
+	document.writeln("<input id = 'buttonPush' type = 'button' value = 'New Values' onclick = 'buttonPush();' /><br />");
 	
 	document.writeln("Bound: " +Math.round(UtiBound)+ "% Utilization: " +Math.round(ute * 100)+ "%");
 	
@@ -265,32 +315,37 @@
 		document.writeln("<br />Because the processor utilization is over 100%, the algorithm is <p style = 'color: red;'> <i>not</i> feasible under either algorithm</p>");
 	};
 		
+		
+	document.writeln("<div style='overflow: auto;'>");
 	grapher();
-	
 	deadlineDriven();
+	document.writeln("</div>");
 	
-	document.writeln("<h1>Info:</h1><p>This program aims to show how the fixed priority rate monotonic algorithm and the Deadline Driven algorithm look when used as outlined in the paper");
-	document.writeln("<a href = 'https://www.cs.ru.nl/~hooman/DES/liu-layland.pdf'> Scheduling Algorithms for Multipogramming in a Hard-Real-Time Environment</a> by Liu and Layland");
-	document.writeln(". In the paper, it is outlined that the fixed priority algorithm can only consistantly achieve a processor utilization that is the below the average of the runtimes and the request periods. ");
-	document.writeln("For more information, see section 5 on acievable processor utilization.</p><p>The fixed priority algorithm works by completing the shortest task first, then moving on to the next. If ");
-	document.writeln("a shorter period ends before the current task is completed (meaning a task higher on the Gantt diagram arrives before the current task is completed, in the Gantt diagrams showed), ");
-	document.writeln(" the shorter period has a higher priority and therefore would preempt (or interrupt) the current task.</p><p>In the dynamic algorithm, the tasks are scheduled on-the-fly based on ");
-	document.writeln("which deadline is closest. At each time interval, there are two choices: either work on the current task or move on to another. For this algorithm, it will only move to ");
-	document.writeln("another task when it's finished with the current task or a task arrives who has an earlier deadline. The priorities, therefore, must be determined on each time interval. ");
-	document.writeln("While this algorithm is more complicated, it has a guaranteed processor utilization of up to 100%, meaning that as long as the processor utilization is under 100%, the ");
-	document.writeln("dynamic scheduling algorithm is feasible.</p><h1>Key:</h1><p>purple lines represent a period ending. The task will be reset and will need to be completed again at this point");
-	document.writeln("</p><p>Green boxes represent tasks that are being completed at that time. That task has the highest priority at that point according to its respective algorithm</p><p>Request Periods");
-	document.writeln("are the length of the periods. A new period will begin after that amount of time units have passed. The tasks are ordered from smallest period to largest</p><p>Run Times are the lengths");
-	document.writeln("of the tasks.</p><p>The numbers at the bottom of the Gantt diagrams are the time units (usually processor cycles).</p><p>m is the number of tasks. The ideal number of tasks, ");
-	document.writeln("I have found, is 3. More than that and the tasks will almost always not be schedulable. Less, and the results will be uninteresting.");
+	printDirections();
+	document.writeln("</div>");
+	
+	function printDirections() {
+		document.writeln("<h1>Info:</h1><p>This program aims to show how the fixed priority rate monotonic algorithm and the Deadline Driven algorithm look when used as outlined in the paper");
+		document.writeln("<a href = 'https://www.cs.ru.nl/~hooman/DES/liu-layland.pdf'> Scheduling Algorithms for Multipogramming in a Hard-Real-Time Environment</a> by Liu and Layland");
+		document.writeln(". In the paper, it is outlined that the fixed priority algorithm can only consistantly achieve a processor utilization that is the below the average of the runtimes and the request periods. ");
+		document.writeln("For more information, see section 5 on acievable processor utilization.</p><p>The fixed priority algorithm works by completing the shortest task first, then moving on to the next. If ");
+		document.writeln("a shorter period ends before the current task is completed (meaning a task higher on the Gantt diagram arrives before the current task is completed, in the Gantt diagrams showed), ");
+		document.writeln(" the shorter period has a higher priority and therefore would preempt (or interrupt) the current task.</p><p>In the dynamic algorithm, the tasks are scheduled on-the-fly based on ");
+		document.writeln("which deadline is closest. At each time interval, there are two choices: either work on the current task or move on to another. For this algorithm, it will only move to ");
+		document.writeln("another task when it's finished with the current task or a task arrives who has an earlier deadline. The priorities, therefore, must be determined on each time interval. ");
+		document.writeln("While this algorithm is more complicated, it has a guaranteed processor utilization of up to 100%, meaning that as long as the processor utilization is under 100%, the ");
+		document.writeln("dynamic scheduling algorithm is feasible.</p><h1>Key:</h1><p>purple lines represent a period ending. The task will be reset and will need to be completed again at this point");
+		document.writeln("</p><p>Green boxes represent tasks that are being completed at that time. That task has the highest priority at that point according to its respective algorithm</p><p>Request Periods");
+		document.writeln("are the length of the periods. A new period will begin after that amount of time units have passed. The tasks are ordered from smallest period to largest</p><p>Run Times are the lengths");
+		document.writeln("of the tasks.</p><p>The numbers at the bottom of the Gantt diagrams are the time units (usually processor cycles).</p><p>m is the number of tasks. The ideal number of tasks, ");
+		document.writeln("I have found, is 3 for the way I'm generating tasks. More than that and the tasks will almost always not be schedulable. Less, and the results will be uninteresting.");
+		document.writeln("<p><strong>To get new random numbers, click the \"New Values\" button under the chart.</strong></p>");
+		document.writeln("<footer><br /><hr><center><p>Created by John DeHart Fall 2019. You can <a href = 'mailto: john@dehart.dev'>Email me</a> at john@dehart.dev</p></center></footer>");
+	};
+	
 	//-->
 </script>
-</head>
-
-<body>
-	<footer>
-		<br /><hr><center><p>Created by John DeHart Fall 2019. You can <a href = "mailto:johndehart00@gmail.com">Email me</a> at johndehart00@gmail.com</p></center>
-	</footer>
+	
 </body>
 
 </html>
